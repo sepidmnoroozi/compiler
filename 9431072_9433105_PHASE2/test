@@ -1,0 +1,9 @@
+class Program{
+    int var, integerId = 4;
+    static void _main(){
+        var = -23 - 22;
+        if(var > 16)
+			integerId = 4;
+    }
+
+}
