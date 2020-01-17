@@ -124,7 +124,7 @@ class CodeGenerator:
 
     def storeArgs(self, args):
         code_list = "\n"
-        for arg in reversed(args):
+        for arg in (args):
             code_list += CodeGenerator.pushVariable(self, arg)
         code_list += "\n"
         return code_list
@@ -140,5 +140,8 @@ class CodeGenerator:
         code = "returnAddress = *labelsTop; // pop return address\n"
         code += "labelsTop = labelsTop + 1;\n\n"
         return code
+
+
+
 
 

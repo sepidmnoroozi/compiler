@@ -20,6 +20,8 @@ class Nonterminal:
         self.args = []
         self.vars = []
         self.func = 0
+        self.func_name = ""
+        self.sym_var = []
 
 
     def get_value(self):

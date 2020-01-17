@@ -1,15 +1,8 @@
 class Program{
 	static void _main(){
-		real grade;
-		real _rating = 9;
-
-		grade = 18;
-
-		if(grade > 16){
-			_rating = 4;
-			_rating = _rating * _rating;
-		}
-
-		print("{_rating}");
+		real a;
+		int b;
+		int c, d;
 	}
+
 }

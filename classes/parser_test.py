@@ -9,6 +9,7 @@ import lexer as l
 
 class Parser:
     def __init__(self):
+        self.scope_counter = -1
         self.t_counter = -1
         self.l_counter = -1
         self.code_generator = CodeGenerator()
@@ -17,16 +18,23 @@ class Parser:
         self.FALSE_LABEL = "FALSE_LABEL"
         self.NEXT_LABEL = "NEXT_LABEL"
         self.VARIABLES = []
-
-        self.VARIABLES =[]
+        self.FuncVARIABLES = []
         self.check = False
-
+        self.symbol_table_list = []
+        self.func_table = []
+        self.variable_decs=""
 
     tokens = l.tokens
     def p_program(self, p):
         """program : macros classes"""
         print("""program -> macros classes""")
         p[0] = Nonterminal()
+
+        p[0].sym_var = p[2].sym_var
+        print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+        print(self.symbol_table_list)
+        print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+
         include = "#include <stdio.h>" + "\n"
         include += "#include <stdio.h>" + "\n"
         if self.t_counter > -1:
@@ -40,10 +48,11 @@ class Parser:
             variables_declaration = ""
         stack_components_declaration = "void* returnAddress;\ndouble * top = (double*) malloc(1000 * sizeof(double));\nvoid ** labelsTop = (void**) malloc(1000 * sizeof(void*));\ntop += 1000;\nlabelsTop += 1000;"
         goto_to_main = "goto _main;\n\n"
-        p[0].code = include + "int main()\n{\n\n" + stack_components_declaration + "\n" + variables_declaration + "\n" + goto_to_main + p[2].code + "\n\nend : return 0;\n}"
+        p[0].code = include + "int main()\n{\n\n" + stack_components_declaration + "\n" + variables_declaration + "\n"+ self.variable_decs  + goto_to_main + p[2].code + "\n\nend : return 0;\n}"
         file = open("final_result.c", "w")
         file.write(p[0].code)
         file.close()
+
 
 
     def p_macros(self, p):
@@ -67,24 +76,28 @@ class Parser:
         print("""classes -> classes class""")
         p[0] = Nonterminal()
         p[0].code = p[1].code + p[2].code
+        p[0].sym_var = p[1].sym_var + p[2].sym_var
 
     def p_classes_e(self, p):
         """classes : """
         print("""classes ->/* Lambda */""")
         p[0] = Nonterminal()
         p[0].code = ""
+        p[0].sym_var = []
 
     def p_class(self, p):
         """class : CLASS ID LCB symbol_decs RCB"""
         print("""class -> CLASS ID LCB symbol_decs RCB""")
         p[0] = Nonterminal()
         p[0].code = p[4].code
+        p[0].sym_var = p[4].sym_var
 
     def p_symbol_decs(self, p):
         """symbol_decs : symbol_decs symbol_dec"""
         print("""symbol_decs -> symbol_decs symbol_dec""")
         p[0] = Nonterminal()
         p[0].code = p[1].code + p[2].code
+        p[0].sym_var = p[1].sym_var + p[2].sym_var
 
     def p_symbol_decs_e(self, p):
         """symbol_decs : """
@@ -103,15 +116,16 @@ class Parser:
         print("""symbol_dec -> func_dec""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
 
     def p_var_dec(self, p):
         """var_dec : var_type var_list SEMICOLON"""
         print("""var_dec -> var_type var_list SEMICOLON""")
         p[0] = Nonterminal()
-        variable_decs = [p[1].rtype + " " + var + ";\n" for var in p[2].vars]
+        self.variable_decs += [p[1].rtype + " " + var + ";\n" for var in p[2].vars]
         self.VARIABLES += p[2].vars
-        p[0].code = variable_decs + "\n" + p[2].code
+        p[0].code = "\n" + p[2].code
 
     def p_var_type_1(self, p):
         """var_type : return_type"""
@@ -203,18 +217,48 @@ class Parser:
         print("""func_dec -> var_type func_body""")
         p[0] = Nonterminal()
         p[0].code = p[2].code
+        p[0].sym_var = p[2].sym_var
+        dic = {}
+        dic["ref"] = "NONE"
+        dic["name"] = p[2].func_name
+        dic["type"] = "FUNCTION"
+        dic["v_type"] = "NONE"
+        dic["size"] = "NONE"
+        dic["address"] = "NONE"
+        dic["return_type"] = p[1]
+        p[0].sym_var.append(dic)
 
     def p_func_dec_1(self, p):
         """func_dec : VOID func_body"""
         print("""func_dec -> VOID func_body""")
         p[0] = Nonterminal()
         p[0].code = p[2].code
+        p[0].sym_var = p[2].sym_var
+        dic = {}
+        dic["ref"] = "NONE"
+        dic["name"] = p[2].func_name
+        dic["type"] = "FUNCTION"
+        dic["v_type"] = "NONE"
+        dic["size"] = "NONE"
+        dic["address"] = "NONE"
+        dic["return_type"] = p[1]
+        p[0].sym_var.append(dic)
 
     def p_func_dec_2(self, p):
         """func_dec : STATIC VOID func_body"""
         print("""func_dec -> STATIC VOID func_body""")
         p[0] = Nonterminal()
         p[0].code = p[3].code
+        p[0].sym_var = p[3].sym_var
+        dic = {}
+        dic["ref"] = "NONE"
+        dic["name"] = p[3].func_name
+        dic["type"] = "FUNCTION"
+        dic["v_type"] = "NONE"
+        dic["size"] = "NONE"
+        dic["address"] = "NONE"
+        dic["return_type"] = p[2]
+        p[0].sym_var.append(dic)
 
     def p_func_body(self, p):
         """func_body : ID LP formal_arguments RP block"""
@@ -223,8 +267,11 @@ class Parser:
 
         return_phrase = "goto end;\n\n" if p[1] == "_main" else CodeGenerator.popReturnAddr(self) + "goto *returnAddress; // return from function\n\n"
         p[0].code = "//function body ----------- \n" + p[1] + ": //function decleration\n\n" + p[3].code + "\n // function body:\n" + p[5].code + "\n// function ended\n" + return_phrase
-
+        # self.variable_decs = ""
         print(p[0].code)
+        p[0].func_name = p[1]
+        p[0].sym_var = p[5].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
 
     def p_formal_arguments(self, p):
         """formal_arguments : formal_arguments_list"""
@@ -244,7 +291,7 @@ class Parser:
         """formal_arguments_list : formal_arguments_list COMMA formal_argument"""
         print("""formal_arguments_list -> formal_arguments_list COMMA formal_argument""")
         p[0] = Nonterminal()
-        p[0].code = p[1].code + p[3].code
+        p[0].code = p[3].code + p[1].code
         p[0].t = p[1].t + p[3].t
 
     def p_formal_arguments_list_1(self, p):
@@ -272,18 +319,21 @@ class Parser:
         print("""block -> LCB statements_list RCB""")
         p[0] = Nonterminal()
         p[0].code = p[2].code
+        p[0].sym_var = p[2].sym_var
 
     def p_block_s(self, p):
         """block : statement"""
         print("""block -> statement""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_statements_list(self, p):
         """statements_list : statements_list statement"""
         print("""statements_list -> statements_list statement""")
         p[0] = Nonterminal()
         p[0].code = p[1].code + p[2].code
+        p[0].sym_var = p[1].sym_var + p[2].sym_var
 
 
     def p_statements_list_e(self, p):
@@ -325,24 +375,28 @@ class Parser:
         print("""statement -> statement_var_dec""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_statement_4(self, p):
         """statement : if"""
         print("""statement -> if""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_statement_5(self, p):
         """statement : for"""
         print("""statement -> for""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_statement_6(self, p):
         """statement : while"""
         print("""statement -> while""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_statement_7(self, p):
         """statement : return"""
@@ -364,14 +418,14 @@ class Parser:
         # print("""assignment -> lvalue ASSIGNMENT exp SEMICOLON""")
         p[0] = Nonterminal()
         if p[3].func == 1:
-            p[0].code = p[1].get_value() + "=" + p[3].get_value() +";\n"
+            p[0].code = p[3].code + "\n" + p[1].get_value() + "=" + p[3].get_value() +";\n"
             print(p[0].code)
             self.check = True
         else:
             p[0].code = p[3].code + p[1].place + " = " + p[3].get_value() + ";\n"
 
         if self.check == False:
-            self.VARIABLES.append(p[1].get_value())
+            self.FuncVARIABLES.append(p[1].get_value())
 
     def p_lvalue_1(self, p):
         """lvalue : lvalue1 %prec LVALI"""
@@ -407,12 +461,41 @@ class Parser:
 
     def p_statement_var_dec(self, p):
         """statement_var_dec : return_type var_list SEMICOLON"""
-        p[0] = Nonterminal()
         print("""statement_var_dec -> return_type var_list SEMICOLON""")
         p[0] = Nonterminal()
-        variable_decs = "\n".join([p[1].rtype + " " + var + ";" for var in p[2].vars])
+        self.variable_decs += "\n".join([p[1].rtype + " " + var + ";\n" for var in p[2].vars])
         self.VARIABLES += p[2].vars
-        p[0].code = variable_decs + "\n" + p[2].code
+        p[0].code = "\n" + p[2].code
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+
+        for i in range(0, len(p[2].vars)):
+            dic = {}
+            dic["ref"]="NONE"
+            dic["name"] = p[2].vars[i]
+            dic["type"] = "VARIABLE"
+            dic["v_type"] = p[1].rtype
+            if dic["v_type"] == "int":
+                dic["size"] = 4
+            elif dic["v_type"] == "double":
+                dic["size"] = 8
+            elif dic["v_type"] == "bool":
+                dic["size"] = 1
+            elif dic["v_type"] == "char*":
+                dic["size"] = 6
+            else:
+                dic["size"] = 0
+
+            if i == 0 :
+                dic["address"] = "NONE"
+            else:
+                dic["address"] = "NONE"
+
+            dic["return_type"] = "NONE"
+
+            p[0].sym_var.append(dic)
+
+        print(p[0].sym_var)
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 
     def p_statement_var_dec_1(self, p):
         """statement_var_dec : lvalue1 var_list SEMICOLON"""
@@ -578,6 +661,11 @@ class Parser:
         p[3].code = p[3].ifexp if p[3].ifexp else p[3].code
         p[0] = Nonterminal()
 
+        ####sym_table
+        p[0].sym_var = p[5].sym_var + p[6].sym_var + p[7].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
+        self.symbol_table_list.append(p[0].sym_var)
+
         p[0].true = self.new_label()
         p[0].next = self.new_label()
         falselabel = None
@@ -585,7 +673,7 @@ class Parser:
         # back patch true block
         self.code_generator.back_patch_true(p[3], p[0].true)
 
-        elsifblock = ""
+        elseifblock = ""
         elseblock = ""
 
         elselabel = None
@@ -595,7 +683,7 @@ class Parser:
             elseblock = elselabel + ": //else\n" + p[7].code
 
         elseiflabel = None
-        # check wheter there is elseif block
+        # check if there is elseif block
         if p[6].code:
             elseiflabel = self.new_label()
             self.code_generator.back_patch_false(p[3], elseiflabel)
@@ -609,20 +697,21 @@ class Parser:
             else:
                 self.code_generator.back_patch_false(p[6], p[0].next)
 
-            elsifblock = elseiflabel + ": //elseifs\n" + p[6].code
-
+            elseifblock = elseiflabel + ": //elseifs\n" + p[6].code
+        # NO elseif check if there is else block
         elif p[7].code:
             self.code_generator.back_patch_false(p[3], elselabel)
             falselabel = elselabel
+        # NO elseif NO else
         else:
             self.code_generator.back_patch_false(p[3], p[0].next)
             falselabel = None
 
-        true_block = p[0].true + ": " + p[5].code + "goto " + p[0].next+ "; //next label\n\n"
+        true_block = p[0].true + ": " + p[5].code + "goto " + p[0].next + "; //next label\n\n"
 
         false_block = ""
         if falselabel:
-            false_block = elsifblock + elseblock
+            false_block = elseifblock + elseblock
 
         next_block = p[0].next + ": //end of if statement - next\n"
 
@@ -636,6 +725,7 @@ class Parser:
         print("""elseif_blocks : elseifs %prec PREC1""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_elseif_blocks_2(self, p):
         """elseif_blocks : """
@@ -652,11 +742,14 @@ class Parser:
         self.code_generator.back_patch_false(p[1], elseif_label)
         p[0].code = p[1].code + elseif_label + ": //elseif \n" + p[2].code + "\n"
 
+        p[0].sym_var = p[1].sym_var + p[2].sym_var
+
     def p_elseifs_2(self, p):
         r"""elseifs : elseif %prec PREC2"""
         print("""elseifs : elseif %prec PREC2""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+        p[0].sym_var = p[1].sym_var
 
     def p_elseif(self, p):
         r"""elseif : ELSEIF LP exp RP block %prec PREC2"""
@@ -667,11 +760,19 @@ class Parser:
         self.code_generator.back_patch_true(p[3], truelabel)
         p[0].code = p[3].code + truelabel + ": //elseif expression\n" + p[5].code + "goto " + self.NEXT_LABEL + "; // next label\n\n"
 
+        p[0].sym_var = p[5].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
+        self.symbol_table_list.append(p[0].sym_var)
+
     def p_else_block_1(self, p):
         r"""else_block : ELSE block %prec PREC2"""
         print("""else_block : ELSE block %prec PREC2""")
         p[0] = Nonterminal()
         p[0].code = p[2].code + "\n"
+
+        p[0].sym_var = p[1].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
+        self.symbol_table_list.append(p[0].sym_var)
 
     def p_else_block_2(self, p):
         r"""else_block : %prec PREC1"""
@@ -735,6 +836,12 @@ class Parser:
         """for : FOR LP ID IN exp TO exp STEPS exp RP block"""
         print("""for -> FOR LP ID IN exp TO exp STEPS exp RP block""")
         p[0] = Nonterminal()
+
+        p[0].sym_var = p[11].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
+        self.symbol_table_list.append(p[0].sym_var)
+
+
         begin = self.new_label()
         code_begin = self.new_label()
         after = self.new_label()
@@ -754,6 +861,12 @@ class Parser:
         print("""while -> WHILE LP exp RP block""")
 
         p[0] = Nonterminal()
+
+        p[0].sym_var = p[5].sym_var
+        self.add_ref(p[0].sym_var, self.new_scope_name())
+        self.symbol_table_list.append(p[0].sym_var)
+
+
         begin = self.new_label()
         code_begin = self.new_label()
         after = self.new_label()
@@ -792,8 +905,8 @@ class Parser:
         """return : RETURN exp SEMICOLON"""
         print("""return -> RETURN exp SEMICOLON""")
         p[0] = Nonterminal()
-        p[0].code = "// push return value to stack\n" + p[2].code + CodeGenerator.pushVariable(self, p[2].get_value())
-        p[0].code += CodeGenerator.popReturnAddr(self) + "goto *returnAddress; // return from function\n\n"
+        p[0].code = "// push return value to stack\n" + p[2].code + CodeGenerator.popReturnAddr(self)
+        p[0].code += CodeGenerator.pushVariable(self, p[2].get_value()) + "goto *returnAddress; // return from function\n\n"
 
     def p_break(self, p):
         """break : BREAK SEMICOLON"""
@@ -1036,10 +1149,13 @@ class Parser:
         p[0] = Nonterminal()
         label = self.new_label()
         p[0].args = p[2].args
+        if self.t_counter > -1 :
+            for i in range(0, self.t_counter):
+                self.FuncVARIABLES.append("TT"+str(i))
+        p[0].code = CodeGenerator.storeVariables(self, self.FuncVARIABLES) + CodeGenerator.pushAddress(self,label)
+        p[0].code += "// store arguments\n" + p[2].code + CodeGenerator.storeArgs(self,p[2].args)+  "\n goto " + p[1].get_value() + ";\n"
         p[0].place = self.new_temp()
-        p[0].code = CodeGenerator.storeVariables(self, self.VARIABLES) + CodeGenerator.pushAddress(self,label)
-        p[0].code += "// store arguments" + p[2].code + CodeGenerator.storeArgs(self,p[2].args)+  "\n goto " + p[1].value + ";\n"
-        p[0].code += "// return label:\n" + label + ":;\n" + "// load return value\n" + CodeGenerator.popVariable(self,p[0].place) +"\n  varaiables:" + CodeGenerator.loadVariables(self,self.VARIABLES)
+        p[0].code += "// return label:\n" + label + ":\n" + "// load return value\n" + CodeGenerator.popVariable(self,p[0].place) +"\n  //varaiables:" + CodeGenerator.loadVariables(self,self.FuncVARIABLES)
         print(p[0].code)
         print("-------------function call--------------")
 
@@ -1115,6 +1231,15 @@ class Parser:
         # ('right', 'ELSEIF')
 
     )
+
+
+    def add_ref(self, list_dic, scope_name):
+        for dic in list_dic:
+            dic["ref"] = scope_name
+
+    def new_scope_name(self):
+        self.scope_counter += 1
+        return "scope" + str(self.t_counter)
 
     def new_temp(self):
         self.t_counter += 1
