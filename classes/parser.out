@@ -6697,7 +6697,6 @@ state 181
     (66) else_block -> . ELSE block
     (67) else_block -> .
 
-  ! shift/reduce conflict for ELSE resolved as shift
     ELSE            shift and go to state 187
     ELSEIF          reduce using rule 67 (else_block -> .)
     RCB             reduce using rule 67 (else_block -> .)
@@ -6736,7 +6735,6 @@ state 182
     (63) elseifs -> elseifs . elseif
     (65) elseif -> . ELSEIF LP exp RP block
 
-    ELSEIF          reduce using rule 61 (elseif_blocks -> elseifs .)
     ELSE            reduce using rule 61 (elseif_blocks -> elseifs .)
     RCB             reduce using rule 61 (elseif_blocks -> elseifs .)
     VOID            reduce using rule 61 (elseif_blocks -> elseifs .)
@@ -6763,8 +6761,9 @@ state 182
     SUBTRACTION     reduce using rule 61 (elseif_blocks -> elseifs .)
     NOT             reduce using rule 61 (elseif_blocks -> elseifs .)
     BITWISE_NOT     reduce using rule 61 (elseif_blocks -> elseifs .)
+    ELSEIF          shift and go to state 184
 
-  ! ELSEIF          [ shift and go to state 184 ]
+  ! ELSEIF          [ reduce using rule 61 (elseif_blocks -> elseifs .) ]
 
     elseif                         shift and go to state 188
 
@@ -7657,4 +7656,3 @@ WARNING:
 WARNING: Conflicts:
 WARNING: 
 WARNING: shift/reduce conflict for ELSEIF in state 178 resolved as shift
-WARNING: shift/reduce conflict for ELSE in state 181 resolved as shift

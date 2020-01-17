@@ -29,12 +29,15 @@ class Parser:
         p[0] = Nonterminal()
         include = "#include <stdio.h>" + "\n"
         include += "#include <stdio.h>" + "\n"
-        variables_declaration = "double "
-        for i in range(0, self.t_counter+1):
-            if i == self.t_counter :
-                variables_declaration += "TT" +str(i)+ ";"
-            else:
-                variables_declaration += "TT" + str(i) + ", "
+        if self.t_counter > -1:
+            variables_declaration = "double "
+            for i in range(0, self.t_counter + 1):
+                if i == self.t_counter:
+                    variables_declaration += "TT" + str(i) + ";"
+                else:
+                    variables_declaration += "TT" + str(i) + ", "
+        else:
+            variables_declaration = ""
         stack_components_declaration = "void* returnAddress;\ndouble * top = (double*) malloc(1000 * sizeof(double));\nvoid ** labelsTop = (void**) malloc(1000 * sizeof(void*));\ntop += 1000;\nlabelsTop += 1000;"
         goto_to_main = "goto _main;\n\n"
         p[0].code = include + "int main()\n{\n\n" + stack_components_declaration + "\n" + variables_declaration + "\n" + goto_to_main + p[2].code + "\n\nend : return 0;\n}"
@@ -105,7 +108,7 @@ class Parser:
     def p_var_dec(self, p):
         """var_dec : var_type var_list SEMICOLON"""
         print("""var_dec -> var_type var_list SEMICOLON""")
-        p[0] = Nonterminal(p)
+        p[0] = Nonterminal()
         variable_decs = [p[1].rtype + " " + var + ";\n" for var in p[2].vars]
         self.VARIABLES += p[2].vars
         p[0].code = variable_decs + "\n" + p[2].code
@@ -176,7 +179,7 @@ class Parser:
         """item1 : ID ASSIGNMENT exp"""
         print("""item1 -> ID ASSIGNMENT exp""")
         p[0] = Nonterminal()
-        p[0].code = p[3].code + p[1] + " = " + p[3].get_value()
+        p[0].code = p[3].code + p[1] + " = " + p[3].get_value() + ";\n"
         p[0].vars = [p[1]]
 
     def p_var_list_item_2(self, p):
@@ -308,9 +311,7 @@ class Parser:
         p[0] = Nonterminal()
         p[0].code = p[1].code
         self.check= False
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         print(p[0].code)
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
 
     def p_statement_2(self, p):
@@ -571,7 +572,8 @@ class Parser:
     #     print(self.code_list)
     #     self.produce_output()
     def p_if(self, p):
-        r'''if :   IF LP exp RP block elseif_blocks else_block'''
+        r"""if : IF LP exp RP block elseif_blocks else_block"""
+        print("""if : IF LP exp RP block elseif_blocks else_block""")
 
         p[3].code = p[3].ifexp if p[3].ifexp else p[3].code
         p[0] = Nonterminal()
@@ -630,17 +632,20 @@ class Parser:
         print("********************************************************************************************")
 
     def p_elseif_blocks_1(self, p):
-        r'''elseif_blocks :   elseifs %prec PREC2'''
+        r"""elseif_blocks : elseifs %prec PREC1"""
+        print("""elseif_blocks : elseifs %prec PREC1""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
 
     def p_elseif_blocks_2(self, p):
-        r'''elseif_blocks : '''
+        """elseif_blocks : """
+        print("""elseif_blocks : """)
         p[0] = Nonterminal()
         p[0].code = None
 
     def p_elseifs_1(self, p):
-        r'''elseifs :   elseifs elseif %prec PREC2'''
+        r"""elseifs : elseifs elseif %prec PREC1"""
+        print("""elseifs : elseifs elseif %prec PREC1""")
         p[0] = Nonterminal()
 
         elseif_label = self.new_label()
@@ -648,12 +653,14 @@ class Parser:
         p[0].code = p[1].code + elseif_label + ": //elseif \n" + p[2].code + "\n"
 
     def p_elseifs_2(self, p):
-        r'''elseifs :   elseif'''
+        r"""elseifs : elseif %prec PREC2"""
+        print("""elseifs : elseif %prec PREC2""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
 
     def p_elseif(self, p):
-        r'''elseif :   ELSEIF LP exp RP block %prec PREC1'''
+        r"""elseif : ELSEIF LP exp RP block %prec PREC2"""
+        print("""elseif : ELSEIF LP exp RP block %prec PREC2""")
         p[0] = Nonterminal()
 
         truelabel = self.new_label()
@@ -661,12 +668,14 @@ class Parser:
         p[0].code = p[3].code + truelabel + ": //elseif expression\n" + p[5].code + "goto " + self.NEXT_LABEL + "; // next label\n\n"
 
     def p_else_block_1(self, p):
-        r'''else_block : ELSE block'''
+        r"""else_block : ELSE block %prec PREC2"""
+        print("""else_block : ELSE block %prec PREC2""")
         p[0] = Nonterminal()
         p[0].code = p[2].code + "\n"
 
     def p_else_block_2(self, p):
-        r'''else_block : '''
+        r"""else_block : %prec PREC1"""
+        print("""else_block : %prec PREC1""")
         p[0] = Nonterminal()
         p[0].code = ""
 
@@ -1073,8 +1082,8 @@ class Parser:
 
 
     precedence = (
-        # ('nonassoc', 'prec2'),
-        # ('nonassoc', 'prec1'),
+        ('nonassoc', 'PREC2'),
+        ('nonassoc', 'PREC1'),
         ('nonassoc', 'LVALI'),
         ('nonassoc', 'LVAL'),
         ('nonassoc', 'BIOP'),
@@ -1101,9 +1110,9 @@ class Parser:
         ('left', 'UMINUS'),
         ('left', 'RP', 'LP'),
         # ('right', 'PREC3'),
-        ('right', 'PREC2'),
-        ('right', 'PREC1'),
-        ('right', 'ELSEIF')
+        # ('right', 'PREC2'),
+        # ('right', 'PREC1'),
+        # ('right', 'ELSEIF')
 
     )
 
