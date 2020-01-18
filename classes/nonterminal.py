@@ -22,6 +22,8 @@ class Nonterminal:
         self.func = 0
         self.func_name = ""
         self.sym_var = []
+        self.sym_rtype = ""
+
 
 
     def get_value(self):

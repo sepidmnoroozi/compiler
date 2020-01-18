@@ -22,7 +22,7 @@ class Parser:
         self.check = False
         self.symbol_table_list = []
         self.func_table = []
-        self.variable_decs=""
+        self.variable_decs = ""
 
     tokens = l.tokens
     def p_program(self, p):
@@ -31,9 +31,9 @@ class Parser:
         p[0] = Nonterminal()
 
         p[0].sym_var = p[2].sym_var
-        print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+
+        print("symbol table list :")
         print(self.symbol_table_list)
-        print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
 
         include = "#include <stdio.h>" + "\n"
         include += "#include <stdio.h>" + "\n"
@@ -78,6 +78,7 @@ class Parser:
         p[0].code = p[1].code + p[2].code
         p[0].sym_var = p[1].sym_var + p[2].sym_var
 
+
     def p_classes_e(self, p):
         """classes : """
         print("""classes ->/* Lambda */""")
@@ -92,12 +93,14 @@ class Parser:
         p[0].code = p[4].code
         p[0].sym_var = p[4].sym_var
 
+
     def p_symbol_decs(self, p):
         """symbol_decs : symbol_decs symbol_dec"""
         print("""symbol_decs -> symbol_decs symbol_dec""")
         p[0] = Nonterminal()
         p[0].code = p[1].code + p[2].code
         p[0].sym_var = p[1].sym_var + p[2].sym_var
+
 
     def p_symbol_decs_e(self, p):
         """symbol_decs : """
@@ -110,6 +113,7 @@ class Parser:
         print("""symbol_dec -> var_dec""")
         p[0] = Nonterminal()
         p[0].code = p[1].code
+
 
     def p_symbol_dec_2(self, p):
         """symbol_dec : func_dec"""
@@ -150,25 +154,29 @@ class Parser:
         """return_type : INT_TYPE"""
         print("""return_type -> INT_TYPE""")
         p[0] = Nonterminal()
-        p[0].rtype = "int"
+        p[0].rtype = "double"
+        p[0].sym_rtype = "int"
 
     def p_return_type_2(self, p):
         """return_type : REAL_TYPE"""
         print("""return_type -> REAL_TYPE""")
         p[0] = Nonterminal()
         p[0].rtype = "double"
+        p[0].sym_rtype = "real"
 
     def p_return_type_3(self, p):
         """return_type : BOOL_TYPE"""
         print("""return_type -> BOOL_TYPE""")
         p[0] = Nonterminal()
         p[0].rtype = "bool"
+        p[0].sym_rtype = "bool"
 
     def p_return_type_4(self, p):
         """return_type : STRING_TYPE"""
         print("""return_type -> STRING_TYPE""")
         p[0] = Nonterminal()
         p[0].rtype = "char*"
+        p[0].sym_rtype = "string"
 
     # def p_return_type_5(self, p):
     #     """return_type : ID"""
@@ -272,6 +280,8 @@ class Parser:
         p[0].func_name = p[1]
         p[0].sym_var = p[5].sym_var
         self.add_ref(p[0].sym_var, self.new_scope_name())
+        #save a scope
+        self.symbol_table_list.append(p[0].sym_var)
 
     def p_formal_arguments(self, p):
         """formal_arguments : formal_arguments_list"""
@@ -377,6 +387,7 @@ class Parser:
         p[0].code = p[1].code
         p[0].sym_var = p[1].sym_var
 
+
     def p_statement_4(self, p):
         """statement : if"""
         print("""statement -> if""")
@@ -473,14 +484,14 @@ class Parser:
             dic["ref"]="NONE"
             dic["name"] = p[2].vars[i]
             dic["type"] = "VARIABLE"
-            dic["v_type"] = p[1].rtype
+            dic["v_type"] = p[0].sym_rtype
             if dic["v_type"] == "int":
                 dic["size"] = 4
-            elif dic["v_type"] == "double":
+            elif dic["v_type"] == "real":
                 dic["size"] = 8
             elif dic["v_type"] == "bool":
                 dic["size"] = 1
-            elif dic["v_type"] == "char*":
+            elif dic["v_type"] == "string":
                 dic["size"] = 6
             else:
                 dic["size"] = 0
@@ -770,7 +781,7 @@ class Parser:
         p[0] = Nonterminal()
         p[0].code = p[2].code + "\n"
 
-        p[0].sym_var = p[1].sym_var
+        p[0].sym_var = p[2].sym_var
         self.add_ref(p[0].sym_var, self.new_scope_name())
         self.symbol_table_list.append(p[0].sym_var)
 

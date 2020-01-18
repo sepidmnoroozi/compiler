@@ -290,9 +290,9 @@ class Lexer():
         #self.fL.write(txt)
         return t
 
-    def t_NOT(self, t):
-        r'!'
-        txt = "Lexeme: " + "\t" + t.value + "\t" + " Token: " + "\t" + "NOT" + "\t" + " Attribute: " + "\t" + "-" + "\n\n"
+    def t_NE(self, t):
+        r'!='
+        txt = "Lexeme: " + "\t" + t.value + "\t" + " Token: " + "\t" + "NE" + "\t" + " Attribute: " + "\t" + "-" + "\n\n"
         # print(txt)
         #self.fL.write(txt)
         return t
@@ -402,9 +402,9 @@ class Lexer():
         #self.fL.write(txt)
         return t
 
-    def t_NE(self, t):
-        r'!='
-        txt = "Lexeme: " + "\t" + t.value + "\t" + " Token: " + "\t" + "NE" + "\t" + " Attribute: " + "\t" + "-" + "\n\n"
+    def t_NOT(self, t):
+        r'!'
+        txt = "Lexeme: " + "\t" + t.value + "\t" + " Token: " + "\t" + "NOT" + "\t" + " Attribute: " + "\t" + "-" + "\n\n"
         # print(txt)
         #self.fL.write(txt)
         return t
